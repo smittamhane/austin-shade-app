@@ -1,0 +1,12 @@
+__pycache__/
+
+data/
+*.gdb
+*.graphml
+*.geojson
+*.shp
+*.shx
+*.dbf
+
+venv/
+.env
