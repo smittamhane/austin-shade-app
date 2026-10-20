@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 
-from algorithm import get_optimal_route
+from algorithm import get_route_comparison
 
 app = FastAPI(title="Austin Shade Routing API")
 
@@ -25,11 +25,10 @@ class RouteRequest(BaseModel):
 @app.post("/api/route")
 async def calculate_route(request: RouteRequest):
     """
-    Receives start/end coordinates, runs the shade algorithm, 
-    and returns a path of coordinates for the map to draw.
+    Compare the shortest-distance and shade-prioritized routes for the requested points.
     """
     try:
-        route_coords = get_optimal_route(
+        route_comparison = get_route_comparison(
             request.start_lat, 
             request.start_lon, 
             request.end_lat, 
@@ -37,10 +36,12 @@ async def calculate_route(request: RouteRequest):
             request.shade_preference
         )
         
-        if route_coords is None:
+        if route_comparison is None:
             raise HTTPException(status_code=404, detail="No path found between these points.")
-            
-        return {"coordinates": route_coords}
-        
+
+        return route_comparison
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
