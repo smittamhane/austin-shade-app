@@ -54,7 +54,7 @@ function App() {
     const timeoutId = setTimeout(async () => {
       controller = new AbortController();
       try {
-        const response = await fetch("http://localhost:8000/api/route", {
+        const response = await fetch("http://127.0.0.1:8000/api/route", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           signal: controller.signal,

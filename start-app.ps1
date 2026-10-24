@@ -6,12 +6,27 @@ $backendUrl = "http://127.0.0.1:8000/docs"
 $frontendUrl = "http://127.0.0.1:5173/"
 $pythonPath = Join-Path $PSScriptRoot ".venv\Scripts\python.exe"
 
-if (-not (Test-Path $pythonPath)) {
-    $pythonCommand = Get-Command python -ErrorAction SilentlyContinue
-    if (-not $pythonCommand) {
-        throw "Python was not found. Install Python and the packages in backend\requirements.txt."
+function Test-PythonRuntime {
+    param([string]$Path)
+
+    try {
+        & $Path -c "import fastapi, osmnx, uvicorn" *> $null
+        return $LASTEXITCODE -eq 0
     }
-    $pythonPath = $pythonCommand.Source
+    catch {
+        return $false
+    }
+}
+
+if (-not (Test-PythonRuntime $pythonPath)) {
+    $pythonCommand = Get-Command python -ErrorAction SilentlyContinue
+    if ($pythonCommand -and (Test-PythonRuntime $pythonCommand.Source)) {
+        $pythonPath = $pythonCommand.Source
+        Write-Host "Using the installed Python because the project virtual environment is unavailable."
+    }
+    else {
+        throw "A working Python environment with the project dependencies was not found. Run the setup commands in README.md."
+    }
 }
 
 $npmCommand = Get-Command npm.cmd -ErrorAction SilentlyContinue

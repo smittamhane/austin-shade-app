@@ -15,7 +15,7 @@ Set `VITE_MAPBOX_TOKEN` in `shade-frontend\.env` to a valid Mapbox public access
 
 ## Start the app
 
-In VS Code, open the Command Palette (`Ctrl+Shift+P`), choose **Tasks: Run Task**, and run **Start BeatTheHeat**. The task starts the backend and frontend, waits for both to be ready, and opens the app at <http://127.0.0.1:5173/>.
+In VS Code, open the command palette (Ctrl+Shift+P) -> Tasks: Run Task -> **Start BeatTheHeat**. The task starts the backend and frontend, waits for both to be ready, and opens the app at <http://127.0.0.1:5173/>.
 
 The backend loads the large street-network graph on startup, which can take a minute. The launcher waits for it before opening the app.
 
