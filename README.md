@@ -11,7 +11,13 @@ cd frontend
 npm ci
 ```
 
-Set `VITE_MAPBOX_TOKEN` in `frontend\.env` to a valid Mapbox public access token.
+Create `frontend\.env` with your Mapbox public access token:
+
+```text
+VITE_MAPBOX_TOKEN=your_mapbox_public_access_token
+```
+
+Restart the app after adding or changing this value so Vite loads the environment variable.
 
 ## Start the app
 

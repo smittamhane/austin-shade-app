@@ -17,7 +17,7 @@ function App() {
   const mapRef = useRef(null);
 
 
-  const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
+  const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN?.trim() ?? '';
 
 // Geocodes an address using the Mapbox API, returning the longitude and latitude of the address. It handles special cases for certain addresses and throws an error if no results are returned.
   const geocode = async (address) => {
@@ -171,6 +171,11 @@ function App() {
         <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.4, color: '#555' }}>
           Enter a full street address for each location, including the city. Business names alone may match the wrong place.
         </p>
+        {!mapboxToken && (
+          <div role="alert" style={{ color: '#8a4b08', fontSize: '13px', backgroundColor: '#fff4e5', padding: '10px', borderRadius: '4px' }}>
+            The map needs a Mapbox public access token. Set VITE_MAPBOX_TOKEN in frontend\.env, then restart the app.
+          </div>
+        )}
        
         <input
           type="text"
@@ -217,14 +222,14 @@ function App() {
        
         <button
           onClick={handleCalculate}
-          disabled={isLoading}
+          disabled={isLoading || !mapboxToken}
           style={{
             padding: '12px',
-            backgroundColor: isLoading ? '#ccc' : '#007cbf',
+            backgroundColor: isLoading || !mapboxToken ? '#ccc' : '#007cbf',
             color: 'white',
             border: 'none',
             borderRadius: '4px',
-            cursor: isLoading ? 'not-allowed' : 'pointer',
+            cursor: isLoading || !mapboxToken ? 'not-allowed' : 'pointer',
             fontWeight: 'bold'
           }}
         >
@@ -277,12 +282,13 @@ function App() {
 
 
       {/* Background Map */}
-      <Map
-        ref={mapRef}
-        initialViewState={{ longitude: -97.7431, latitude: 30.2672, zoom: 13 }}
-        mapStyle="mapbox://styles/mapbox/outdoors-v12"
-        mapboxAccessToken={mapboxToken}
-      >
+      {mapboxToken ? (
+        <Map
+          ref={mapRef}
+          initialViewState={{ longitude: -97.7431, latitude: 30.2672, zoom: 13 }}
+          mapStyle="mapbox://styles/mapbox/outdoors-v12"
+          mapboxAccessToken={mapboxToken}
+        >
         {routeData && (
           <>
             {routeData.shortest_route.coordinates.length > 1 && (
@@ -332,7 +338,26 @@ function App() {
             )}
           </>
         )}
-      </Map>
+        </Map>
+      ) : (
+        <div
+          role="alert"
+          style={{
+            width: '100%',
+            height: '100%',
+            display: 'grid',
+            placeItems: 'center',
+            backgroundColor: '#f4f6f8',
+            color: '#555',
+            fontFamily: 'sans-serif',
+            textAlign: 'center',
+            padding: '24px',
+            boxSizing: 'border-box'
+          }}
+        >
+          Map unavailable until a Mapbox public access token is configured.
+        </div>
+      )}
     </div>
   );
 }
