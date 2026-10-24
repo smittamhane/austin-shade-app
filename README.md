@@ -7,15 +7,15 @@ Install Python and Node.js, then run these commands from the project folder in P
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
-cd shade-frontend
+cd frontend
 npm ci
 ```
 
-Set `VITE_MAPBOX_TOKEN` in `shade-frontend\.env` to a valid Mapbox public access token.
+Set `VITE_MAPBOX_TOKEN` in `frontend\.env` to a valid Mapbox public access token.
 
 ## Start the app
 
-In VS Code, open the command palette (Ctrl+Shift+P) -> Tasks: Run Task -> **Start BeatTheHeat**. The task starts the backend and frontend, waits for both to be ready, and opens the app at <http://127.0.0.1:5173/>.
+In VS Code, open the command palette (Ctrl+Shift+P) -> Tasks: Run Task -> Start BeatTheHeat. The task starts the backend and frontend, waits for both to be ready, and opens the app at <http://127.0.0.1:5173/>.
 
 The backend loads the large street-network graph on startup, which can take a minute. The launcher waits for it before opening the app.
 

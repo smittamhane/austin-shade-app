@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $backendPath = Join-Path $PSScriptRoot "backend"
-$frontendPath = Join-Path $PSScriptRoot "shade-frontend"
+$frontendPath = Join-Path $PSScriptRoot "frontend"
 $backendUrl = "http://127.0.0.1:8000/docs"
 $frontendUrl = "http://127.0.0.1:5173/"
 $pythonPath = Join-Path $PSScriptRoot ".venv\Scripts\python.exe"
