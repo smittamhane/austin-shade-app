@@ -3,6 +3,8 @@ import Map, { Source, Layer } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 
+
+// Defines variables that will be used in the App component, including state variables for addresses, shade preference, route data, loading state, and error messages. It also defines a reference for the map and retrieves the Mapbox token from environment variables.
 function App() {
   const [startAddress, setStartAddress] = useState('');
   const [endAddress, setEndAddress] = useState('');
@@ -16,9 +18,9 @@ function App() {
   const mapRef = useRef(null);
 
 
-  const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
+  const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN?.trim() ?? '';
 
-
+// Geocodes an address using the Mapbox API, returning the longitude and latitude of the address. It handles special cases for certain addresses and throws an error if no results are returned.
   const geocode = async (address) => {
     const cleanToken = mapboxToken.trim();
     const searchAddress = /^(?:texas\s+)?(?:state\s+)?capitol$/i.test(address.trim())
@@ -42,7 +44,7 @@ function App() {
     throw new Error(`Error for "${address}": ${errorDetail}`);
   };
 
-
+// Effect hook that triggers when routeCoordinates change. It sends a POST request to the backend API to calculate the route based on the provided coordinates and shade preference. It handles loading state, error messages, and updates the route data state with the response from the backend.
   useEffect(() => {
     if (!routeCoordinates || travelMode !== 'walking') return;
 
@@ -64,7 +66,7 @@ function App() {
             shade_preference: routeCoordinates.shadePreference
           }),
         });
-
+// Checks if the response from the backend is not OK (status code not in the range 200-299). If it's not OK, it throws an error indicating that the backend failed to calculate the route and suggests ensuring that the route is within the map bounds.
         if (!response.ok) {
           throw new Error("Backend failed to calculate route. Ensure the route is within the map bounds.");
         }
@@ -99,7 +101,7 @@ function App() {
     };
   }, [routeCoordinates, travelMode]);
 
-
+// The map fits around both the shortest and shaded routes by calculating the bounding box of all coordinates from both routes. It uses the `fitBounds` method to adjust the map view to include all relevant points with padding, maximum zoom, and animation duration.
   useEffect(() => {
     const coordinates = [
       ...(routeData?.shortest_route?.coordinates ?? []),
@@ -202,27 +204,8 @@ function App() {
         <h3 style={{ margin: 0, color: '#333' }}>BeatTheHeat</h3>
 
         <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.4, color: '#555' }}>
-          Choose a travel mode and enter a full street address for each location, including the city.
+          Enter a full street address for each location, including the city. Business names alone may match the wrong place.
         </p>
-
-        <label style={{ display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '14px', color: '#555' }}>
-          Travel mode
-          <select
-            value={travelMode}
-            onChange={(e) => {
-              setTravelMode(e.target.value);
-              setRouteData(null);
-              setBikeRoute(null);
-              setRouteCoordinates(null);
-              setErrorMsg('');
-            }}
-            disabled={isLoading}
-            style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
-          >
-            <option value="walking">Walking (shade-aware)</option>
-            <option value="biking">Biking</option>
-          </select>
-        </label>
        
         <input
           type="text"
@@ -246,7 +229,8 @@ function App() {
           </label>
           <input
             type="range"
-            min="0" max="100"
+            //Changing the shade preference slider will update the current route if routeCoordinates are already set. It also updates the shadePreference state variable.
+            min="0" max="100" 
             value={shadePreference}
             onChange={(e) => {
               const preference = Number(e.target.value);
@@ -268,14 +252,14 @@ function App() {
        
         <button
           onClick={handleCalculate}
-          disabled={isLoading}
+          disabled={isLoading || !mapboxToken}
           style={{
             padding: '12px',
-            backgroundColor: isLoading ? '#ccc' : '#007cbf',
+            backgroundColor: isLoading || !mapboxToken ? '#ccc' : '#007cbf',
             color: 'white',
             border: 'none',
             borderRadius: '4px',
-            cursor: isLoading ? 'not-allowed' : 'pointer',
+            cursor: isLoading || !mapboxToken ? 'not-allowed' : 'pointer',
             fontWeight: 'bold'
           }}
         >
@@ -291,6 +275,7 @@ function App() {
         {routeData && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', color: '#333', fontSize: '14px' }}>
             {[
+// defines the route types to display, including the shortest route and the shade-prioritized route. It maps over these routes to display their details, including distance, estimated shade coverage, and any extra distance compared to the shortest route.
               { key: 'shortest_route', label: 'Shortest route', color: '#007cbf' },
               { key: 'shaded_route', label: 'Shade-prioritized route', color: '#24834a' },
             ].map(({ key, label, color }) => {
@@ -339,12 +324,13 @@ function App() {
 
 
       {/* Background Map */}
-      <Map
-        ref={mapRef}
-        initialViewState={{ longitude: -97.7431, latitude: 30.2672, zoom: 13 }}
-        mapStyle="mapbox://styles/mapbox/outdoors-v12"
-        mapboxAccessToken={mapboxToken}
-      >
+      {mapboxToken ? (
+        <Map
+          ref={mapRef}
+          initialViewState={{ longitude: -97.7431, latitude: 30.2672, zoom: 13 }}
+          mapStyle="mapbox://styles/mapbox/outdoors-v12"
+          mapboxAccessToken={mapboxToken}
+        >
         {routeData && (
           <>
             {routeData.shortest_route.coordinates.length > 1 && (
@@ -368,6 +354,7 @@ function App() {
                   }}
                 />
               </Source>
+//Offsets the shortest route line to the left and the shaded route to the right, making them visually distinct on the map. The shortest route is offset by -2.5 units, while the shaded route is offset by +2.5 units.
             )}
             {routeData.shaded_route.coordinates.length > 1 && (
               <Source
@@ -392,27 +379,6 @@ function App() {
               </Source>
             )}
           </>
-        )}
-        {bikeRoute?.coordinates.length > 1 && (
-          <Source
-            id="bike-route-source"
-            type="geojson"
-            data={{
-              type: 'Feature',
-              properties: {},
-              geometry: { type: 'LineString', coordinates: bikeRoute.coordinates }
-            }}
-          >
-            <Layer
-              id="bike-route-layer"
-              type="line"
-              paint={{
-                'line-color': '#d97706',
-                'line-width': 5,
-                'line-opacity': 0.9
-              }}
-            />
-          </Source>
         )}
       </Map>
     </div>
