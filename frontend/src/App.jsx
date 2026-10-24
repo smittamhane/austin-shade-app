@@ -331,56 +331,56 @@ function App() {
           mapStyle="mapbox://styles/mapbox/outdoors-v12"
           mapboxAccessToken={mapboxToken}
         >
-        {routeData && (
-          <>
-            {routeData.shortest_route.coordinates.length > 1 && (
-              <Source
-                id="shortest-route-source"
-                type="geojson"
-                data={{
-                  type: 'Feature',
-                  properties: {},
-                  geometry: { type: 'LineString', coordinates: routeData.shortest_route.coordinates }
-                }}
-              >
-                <Layer
-                  id="shortest-route-layer"
-                  type="line"
-                  paint={{
-                    'line-color': '#007cbf',
-                    'line-width': 5,
-                    'line-opacity': 0.9,
-                    'line-offset': -2.5
+          {routeData && (
+            <>
+              {routeData.shortest_route.coordinates.length > 1 && (
+                <Source
+                  id="shortest-route-source"
+                  type="geojson"
+                  data={{
+                    type: 'Feature',
+                    properties: {},
+                    geometry: { type: 'LineString', coordinates: routeData.shortest_route.coordinates }
                   }}
-                />
-              </Source>
-//Offsets the shortest route line to the left and the shaded route to the right, making them visually distinct on the map. The shortest route is offset by -2.5 units, while the shaded route is offset by +2.5 units.
-            )}
-            {routeData.shaded_route.coordinates.length > 1 && (
-              <Source
-                id="shaded-route-source"
-                type="geojson"
-                data={{
-                  type: 'Feature',
-                  properties: {},
-                  geometry: { type: 'LineString', coordinates: routeData.shaded_route.coordinates }
-                }}
-              >
-                <Layer
-                  id="shaded-route-layer"
-                  type="line"
-                  paint={{
-                    'line-color': '#24834a',
-                    'line-width': 5,
-                    'line-opacity': 0.9,
-                    'line-offset': 2.5
+                >
+                  <Layer
+                    id="shortest-route-layer"
+                    type="line"
+                    paint={{
+                      'line-color': '#007cbf',
+                      'line-width': 5,
+                      'line-opacity': 0.9,
+                      'line-offset': -2.5
+                    }}
+                  />
+                </Source>
+              )}
+              {routeData.shaded_route.coordinates.length > 1 && (
+                <Source
+                  id="shaded-route-source"
+                  type="geojson"
+                  data={{
+                    type: 'Feature',
+                    properties: {},
+                    geometry: { type: 'LineString', coordinates: routeData.shaded_route.coordinates }
                   }}
-                />
-              </Source>
-            )}
-          </>
-        )}
-      </Map>
+                >
+                  <Layer
+                    id="shaded-route-layer"
+                    type="line"
+                    paint={{
+                      'line-color': '#24834a',
+                      'line-width': 5,
+                      'line-opacity': 0.9,
+                      'line-offset': 2.5
+                    }}
+                  />
+                </Source>
+              )}
+            </>
+          )}
+        </Map>
+      ) : null}
     </div>
   );
 }
