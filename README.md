@@ -20,3 +20,5 @@ In VS Code, open the command palette (Ctrl+Shift+P) -> Tasks: Run Task -> Start 
 The backend loads the large street-network graph on startup, which can take a minute. The launcher waits for it before opening the app.
 
 The route panel compares the shortest-distance and shade-prioritized routes. It displays each route's distance in miles and its estimated shade coverage, calculated as a distance-weighted summary of the street-network data.
+
+Choose **Walking (shade-aware)** to compare shortest and shade-prioritized routes on the pedestrian network, or **Biking** to calculate and display a cycling route with Mapbox Directions. Biking route directions may use bike paths and trails where available.

@@ -7,8 +7,9 @@ function App() {
   const [startAddress, setStartAddress] = useState('');
   const [endAddress, setEndAddress] = useState('');
   const [shadePreference, setShadePreference] = useState(10.0);
- 
+  const [travelMode, setTravelMode] = useState('walking');
   const [routeData, setRouteData] = useState(null);
+  const [bikeRoute, setBikeRoute] = useState(null);
   const [routeCoordinates, setRouteCoordinates] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -43,7 +44,7 @@ function App() {
 
 
   useEffect(() => {
-    if (!routeCoordinates) return;
+    if (!routeCoordinates || travelMode !== 'walking') return;
 
     let cancelled = false;
     let controller;
@@ -96,13 +97,14 @@ function App() {
       clearTimeout(timeoutId);
       controller?.abort();
     };
-  }, [routeCoordinates]);
+  }, [routeCoordinates, travelMode]);
 
 
   useEffect(() => {
     const coordinates = [
       ...(routeData?.shortest_route?.coordinates ?? []),
       ...(routeData?.shaded_route?.coordinates ?? []),
+      ...(bikeRoute?.coordinates ?? []),
     ];
     if (!coordinates?.length) return;
 
@@ -122,7 +124,7 @@ function App() {
       [[bounds.west, bounds.south], [bounds.east, bounds.north]],
       { padding: 80, maxZoom: 15, duration: 600 }
     );
-  }, [routeData]);
+  }, [routeData, bikeRoute]);
 
 
   const handleCalculate = async () => {
@@ -135,6 +137,7 @@ function App() {
     setIsLoading(true);
     setErrorMsg('');
     setRouteData(null);
+    setBikeRoute(null);
     setRouteCoordinates(null);
 
 
@@ -143,11 +146,43 @@ function App() {
         geocode(startAddress),
         geocode(endAddress),
       ]);
-      setRouteCoordinates({
+      const coordinates = {
         start: startCoords,
         end: endCoords,
         shadePreference: parseFloat(shadePreference)
-      });
+      };
+
+      if (travelMode === 'biking') {
+        const directionsUrl = new URL(
+          `https://api.mapbox.com/directions/v5/mapbox/cycling/${startCoords.lon},${startCoords.lat};${endCoords.lon},${endCoords.lat}`
+        );
+        directionsUrl.searchParams.set('access_token', mapboxToken.trim());
+        directionsUrl.searchParams.set('geometries', 'geojson');
+        directionsUrl.searchParams.set('overview', 'full');
+        directionsUrl.searchParams.set('steps', 'false');
+
+        const response = await fetch(directionsUrl);
+        const data = await response.json();
+        const route = data.routes?.[0];
+        const routeCoordinates = route?.geometry?.coordinates;
+        if (!response.ok || !Array.isArray(routeCoordinates) || routeCoordinates.length < 2
+          || routeCoordinates.some((coordinate) =>
+            !Array.isArray(coordinate) || coordinate.length < 2
+            || !Number.isFinite(coordinate[0]) || !Number.isFinite(coordinate[1]))
+          || !Number.isFinite(route.distance) || route.distance < 0
+          || !Number.isFinite(route.duration) || route.duration < 0) {
+          throw new Error(data.message || 'Unable to calculate a biking route for these locations.');
+        }
+
+        setBikeRoute({
+          coordinates: routeCoordinates,
+          distanceMeters: route.distance,
+          durationSeconds: route.duration,
+        });
+        setIsLoading(false);
+      } else {
+        setRouteCoordinates(coordinates);
+      }
     } catch (error) {
       setErrorMsg(error.message);
       setIsLoading(false);
@@ -167,8 +202,27 @@ function App() {
         <h3 style={{ margin: 0, color: '#333' }}>BeatTheHeat</h3>
 
         <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.4, color: '#555' }}>
-          Enter a full street address for each location, including the city. Business names alone may match the wrong place.
+          Choose a travel mode and enter a full street address for each location, including the city.
         </p>
+
+        <label style={{ display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '14px', color: '#555' }}>
+          Travel mode
+          <select
+            value={travelMode}
+            onChange={(e) => {
+              setTravelMode(e.target.value);
+              setRouteData(null);
+              setBikeRoute(null);
+              setRouteCoordinates(null);
+              setErrorMsg('');
+            }}
+            disabled={isLoading}
+            style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
+          >
+            <option value="walking">Walking (shade-aware)</option>
+            <option value="biking">Biking</option>
+          </select>
+        </label>
        
         <input
           type="text"
@@ -186,7 +240,7 @@ function App() {
           style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
         />
        
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+        {travelMode === 'walking' && <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
           <label style={{ fontSize: '14px', color: '#555' }}>
             Shade Weight (As this value increases, the route will prioritize shaded areas): {shadePreference} %
           </label>
@@ -210,7 +264,7 @@ function App() {
           <span style={{ fontSize: '12px', color: '#777' }}>
             Adjusting this updates the current route.
           </span>
-        </div>
+        </div>}
        
         <button
           onClick={handleCalculate}
@@ -225,7 +279,7 @@ function App() {
             fontWeight: 'bold'
           }}
         >
-          {isLoading ? 'Calculating...' : 'Get Route'}
+          {isLoading ? 'Calculating...' : travelMode === 'biking' ? 'Get Bike Route' : 'Get Walking Route'}
         </button>
 
 
@@ -259,6 +313,18 @@ function App() {
                   {key === 'shaded_route' && extraMiles > 0.01 && (
                     <div style={{ color: '#555', fontSize: '13px' }}>
                       {extraMiles.toFixed(2)} mi farther than the shortest route
+                    </div>
+                  )}
+                  {bikeRoute && (
+                    <div style={{ borderLeft: '4px solid #d97706', paddingLeft: '10px', color: '#333', fontSize: '14px' }}>
+                      <strong>Biking route</strong>
+                      <div>{(bikeRoute.distanceMeters / 1609.344).toFixed(2)} mi</div>
+                      <div style={{ color: '#555', fontSize: '13px' }}>
+                        Estimated ride time: {Math.round(bikeRoute.durationSeconds / 60)} min
+                      </div>
+                      <div style={{ color: '#777', fontSize: '11px', marginTop: '4px' }}>
+                        Route calculated with Mapbox cycling directions, which can include bike paths and trails.
+                      </div>
                     </div>
                   )}
                 </div>
@@ -326,6 +392,27 @@ function App() {
               </Source>
             )}
           </>
+        )}
+        {bikeRoute?.coordinates.length > 1 && (
+          <Source
+            id="bike-route-source"
+            type="geojson"
+            data={{
+              type: 'Feature',
+              properties: {},
+              geometry: { type: 'LineString', coordinates: bikeRoute.coordinates }
+            }}
+          >
+            <Layer
+              id="bike-route-layer"
+              type="line"
+              paint={{
+                'line-color': '#d97706',
+                'line-width': 5,
+                'line-opacity': 0.9
+              }}
+            />
+          </Source>
         )}
       </Map>
     </div>
