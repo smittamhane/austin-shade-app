@@ -1,11 +1,11 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-
-
 from algorithm import get_route_comparison
 
-app = FastAPI(title="Austin Shade Routing API")
+# FastAPI creates the web API. CORS controls the web pages that are allowed to make requests to API. Pydantic Base class defines the strucutre of data
+
+app = FastAPI(title="BeatTheHeat API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -15,6 +15,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+#Expected format of a request to the endpoint  
 class RouteRequest(BaseModel):
     start_lat: float
     start_lon: float
@@ -22,11 +23,9 @@ class RouteRequest(BaseModel):
     end_lon: float
     shade_preference: float = 5.0  
 
+# Registers handler for POST requests to /api/route  
 @app.post("/api/route")
 async def calculate_route(request: RouteRequest):
-    """
-    Compare the shortest-distance and shade-prioritized routes for the requested points.
-    """
     try:
         route_comparison = get_route_comparison(
             request.start_lat, 

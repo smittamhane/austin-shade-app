@@ -11,6 +11,19 @@ import requests
 import shapely
 from pyproj import Transformer
 
+#shutil tempfile and zipfile are used to move extracted files
+
+#GeoPandas interacts with geographic data
+
+#NumPy  used for numerical operations
+
+#requests downloads the canopy dataset
+
+# shapely used for geometric operations
+
+# transformer converts coordinates between coordinate reference systems 
+
+
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
 GRAPH_PATH = DATA_DIR / "austin_shaded_network.graphml"
@@ -19,17 +32,20 @@ CANOPY_ARCHIVE_URL = (
     "08a5ed35-868c-40a5-9f8a-6832773c5c8e?filename=Tree_Canopy_2022.zip"
 )
 CANOPY_ARCHIVE_PATH = DATA_DIR / "Tree_Canopy_2022.zip"
+#set coordinate system for street network
 STREET_CRS = "EPSG:32614"
+
+#set coordinate system for canopy dataset
 CANOPY_CRS = "EPSG:2277"
 
-
+# finds and extracts canopy dataset.
 def _ensure_canopy_geodatabase():
     existing_gdb = next(DATA_DIR.rglob("*.gdb"), None)
     if existing_gdb:
         return existing_gdb
 
     partial_path = CANOPY_ARCHIVE_PATH.with_suffix(".zip.part")
-    print("Downloading Austin's 2022 tree-canopy dataset (about 386 MB)...", flush=True)
+    print("Downloading Austin's 2022 tree-canopy dataset (about 386 MB)", flush=True)
     try:
         with requests.get(
             CANOPY_ARCHIVE_URL, stream=True, timeout=(30, 120)
@@ -55,7 +71,7 @@ def _ensure_canopy_geodatabase():
             partial_path.unlink()
         raise
 
-    print("Extracting tree-canopy geodatabase...", flush=True)
+    print("Extracting tree-canopy geodatabase", flush=True)
     with tempfile.TemporaryDirectory(prefix="canopy_extract_", dir=DATA_DIR) as temp_dir:
         extraction_root = Path(temp_dir).resolve()
         with ZipFile(CANOPY_ARCHIVE_PATH) as archive:
@@ -73,7 +89,7 @@ def _ensure_canopy_geodatabase():
 
     return geodatabase
 
-
+#loads existing graph or downloads one if missing
 def _load_street_graph():
     if GRAPH_PATH.exists():
         print(f"Loading street network from {GRAPH_PATH}...", flush=True)
@@ -87,7 +103,7 @@ def _load_street_graph():
         graph = ox.project_graph(graph, to_crs=STREET_CRS)
     return graph
 
-
+# adds estimated canopy coverage to street network and saves the result  
 def create_shaded_graph():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     canopy_gdb = _ensure_canopy_geodatabase()
