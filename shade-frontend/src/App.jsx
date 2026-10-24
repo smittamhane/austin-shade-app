@@ -171,7 +171,7 @@ function App() {
         display: 'flex', flexDirection: 'column', gap: '15px',
         fontFamily: 'sans-serif'
       }}>
-        <h3 style={{ margin: 0, color: '#333' }}>Austin Shade Routing</h3>
+        <h3 style={{ margin: 0, color: '#333' }}>BeatTheHeat</h3>
 
         <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.4, color: '#555' }}>
           Enter a full street address for each location, including the city. Business names alone may match the wrong place.

@@ -82,5 +82,5 @@ else {
     Write-Host "Frontend is already running."
 }
 
-Write-Host "Austin Shade Routing is ready at $frontendUrl"
+Write-Host "BeatTheHeat is ready at $frontendUrl"
 Start-Process $frontendUrl
