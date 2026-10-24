@@ -3,6 +3,8 @@ import Map, { Source, Layer } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 
+
+// Defines variables that will be used in the App component, including state variables for addresses, shade preference, route data, loading state, and error messages. It also defines a reference for the map and retrieves the Mapbox token from environment variables.
 function App() {
   const [startAddress, setStartAddress] = useState('');
   const [endAddress, setEndAddress] = useState('');
@@ -17,7 +19,7 @@ function App() {
 
   const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
-
+// Geocodes an address using the Mapbox API, returning the longitude and latitude of the address. It handles special cases for certain addresses and throws an error if no results are returned.
   const geocode = async (address) => {
     const cleanToken = mapboxToken.trim();
     const searchAddress = /^(?:texas\s+)?(?:state\s+)?capitol$/i.test(address.trim())
@@ -41,7 +43,7 @@ function App() {
     throw new Error(`Error for "${address}": ${errorDetail}`);
   };
 
-
+// Effect hook that triggers when routeCoordinates change. It sends a POST request to the backend API to calculate the route based on the provided coordinates and shade preference. It handles loading state, error messages, and updates the route data state with the response from the backend.
   useEffect(() => {
     if (!routeCoordinates) return;
 
@@ -63,7 +65,7 @@ function App() {
             shade_preference: routeCoordinates.shadePreference
           }),
         });
-
+// Checks if the response from the backend is not OK (status code not in the range 200-299). If it's not OK, it throws an error indicating that the backend failed to calculate the route and suggests ensuring that the route is within the map bounds.
         if (!response.ok) {
           throw new Error("Backend failed to calculate route. Ensure the route is within the map bounds.");
         }
@@ -98,7 +100,7 @@ function App() {
     };
   }, [routeCoordinates]);
 
-
+// The map fits around both the shortest and shaded routes by calculating the bounding box of all coordinates from both routes. It uses the `fitBounds` method to adjust the map view to include all relevant points with padding, maximum zoom, and animation duration.
   useEffect(() => {
     const coordinates = [
       ...(routeData?.shortest_route?.coordinates ?? []),
@@ -192,7 +194,8 @@ function App() {
           </label>
           <input
             type="range"
-            min="0" max="100"
+            //Changing the shade preference slider will update the current route if routeCoordinates are already set. It also updates the shadePreference state variable.
+            min="0" max="100" 
             value={shadePreference}
             onChange={(e) => {
               const preference = Number(e.target.value);
@@ -237,6 +240,7 @@ function App() {
         {routeData && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', color: '#333', fontSize: '14px' }}>
             {[
+// defines the route types to display, including the shortest route and the shade-prioritized route. It maps over these routes to display their details, including distance, estimated shade coverage, and any extra distance compared to the shortest route.
               { key: 'shortest_route', label: 'Shortest route', color: '#007cbf' },
               { key: 'shaded_route', label: 'Shade-prioritized route', color: '#24834a' },
             ].map(({ key, label, color }) => {
@@ -302,6 +306,7 @@ function App() {
                   }}
                 />
               </Source>
+//Offsets the shortest route line to the left and the shaded route to the right, making them visually distinct on the map. The shortest route is offset by -2.5 units, while the shaded route is offset by +2.5 units.
             )}
             {routeData.shaded_route.coordinates.length > 1 && (
               <Source
