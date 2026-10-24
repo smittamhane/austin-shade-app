@@ -4,12 +4,10 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 
 
 function App() {
-  // UI State Variables
   const [startAddress, setStartAddress] = useState('');
   const [endAddress, setEndAddress] = useState('');
   const [shadePreference, setShadePreference] = useState(10.0);
  
-  // Application State Variables
   const [routeData, setRouteData] = useState(null);
   const [routeCoordinates, setRouteCoordinates] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -20,7 +18,6 @@ function App() {
   const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
 
-  // Helper function to translate text addresses into GPS coordinates
   const geocode = async (address) => {
     const cleanToken = mapboxToken.trim();
     const searchAddress = /^(?:texas\s+)?(?:state\s+)?capitol$/i.test(address.trim())
@@ -128,7 +125,6 @@ function App() {
   }, [routeData]);
 
 
-  // Main submission handler
   const handleCalculate = async () => {
     if (!startAddress || !endAddress) {
       setErrorMsg("Please enter both a start and end address.");
@@ -143,7 +139,6 @@ function App() {
 
 
     try {
-      // 1. Geocode both addresses via Mapbox before requesting a route
       const [startCoords, endCoords] = await Promise.all([
         geocode(startAddress),
         geocode(endAddress),
@@ -162,8 +157,6 @@ function App() {
 
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
-     
-      {/* Floating Control Panel */}
       <div style={{
         position: 'absolute', top: 20, left: 20, zIndex: 10,
         backgroundColor: 'white', padding: '20px', borderRadius: '8px',
