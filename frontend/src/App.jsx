@@ -222,6 +222,44 @@ function App() {
           onChange={(e) => setEndAddress(e.target.value)}
           style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
         />
+
+        <fieldset style={{ display: 'flex', flexDirection: 'column', gap: '8px', border: '0', padding: 0, margin: 0 }}>
+          <legend style={{ fontSize: '14px', color: '#555', marginBottom: '8px' }}>Travel mode</legend>
+          <label style={{ fontSize: '14px', color: '#555' }}>
+            <input
+              type="radio"
+              name="travel-mode"
+              value="walking"
+              checked={travelMode === 'walking'}
+              onChange={() => {
+                setTravelMode('walking');
+                setRouteData(null);
+                setBikeRoute(null);
+                setRouteCoordinates(null);
+                setIsLoading(false);
+                setErrorMsg('');
+              }}
+            />
+            Walking (shade-aware)
+          </label>
+          <label style={{ fontSize: '14px', color: '#555' }}>
+            <input
+              type="radio"
+              name="travel-mode"
+              value="biking"
+              checked={travelMode === 'biking'}
+              onChange={() => {
+                setTravelMode('biking');
+                setRouteData(null);
+                setBikeRoute(null);
+                setRouteCoordinates(null);
+                setIsLoading(false);
+                setErrorMsg('');
+              }}
+            />
+            Biking
+          </label>
+        </fieldset>
        
         {travelMode === 'walking' && <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
           <label style={{ fontSize: '14px', color: '#555' }}>
@@ -272,7 +310,7 @@ function App() {
             {errorMsg}
           </div>
         )}
-        {routeData && (
+        {travelMode === 'walking' && routeData && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', color: '#333', fontSize: '14px' }}>
             {[
 // defines the route types to display, including the shortest route and the shade-prioritized route. It maps over these routes to display their details, including distance, estimated shade coverage, and any extra distance compared to the shortest route.
@@ -300,23 +338,23 @@ function App() {
                       {extraMiles.toFixed(2)} mi farther than the shortest route
                     </div>
                   )}
-                  {bikeRoute && (
-                    <div style={{ borderLeft: '4px solid #d97706', paddingLeft: '10px', color: '#333', fontSize: '14px' }}>
-                      <strong>Biking route</strong>
-                      <div>{(bikeRoute.distanceMeters / 1609.344).toFixed(2)} mi</div>
-                      <div style={{ color: '#555', fontSize: '13px' }}>
-                        Estimated ride time: {Math.round(bikeRoute.durationSeconds / 60)} min
-                      </div>
-                      <div style={{ color: '#777', fontSize: '11px', marginTop: '4px' }}>
-                        Route calculated with Mapbox cycling directions, which can include bike paths and trails.
-                      </div>
-                    </div>
-                  )}
                 </div>
               );
             })}
             <div style={{ color: '#777', fontSize: '11px' }}>
               Shade coverage is estimated from the route's distance-weighted street data.
+            </div>
+          </div>
+        )}
+        {travelMode === 'biking' && bikeRoute && (
+          <div style={{ borderLeft: '4px solid #d97706', paddingLeft: '10px', color: '#333', fontSize: '14px' }}>
+            <strong>Biking route</strong>
+            <div>{(bikeRoute.distanceMeters / 1609.344).toFixed(2)} mi</div>
+            <div style={{ color: '#555', fontSize: '13px' }}>
+              Estimated ride time: {Math.round(bikeRoute.durationSeconds / 60)} min
+            </div>
+            <div style={{ color: '#777', fontSize: '11px', marginTop: '4px' }}>
+              Route calculated with Mapbox cycling directions, which can include bike paths and trails.
             </div>
           </div>
         )}
@@ -331,7 +369,7 @@ function App() {
           mapStyle="mapbox://styles/mapbox/outdoors-v12"
           mapboxAccessToken={mapboxToken}
         >
-          {routeData && (
+          {travelMode === 'walking' && routeData && (
             <>
               {routeData.shortest_route.coordinates.length > 1 && (
                 <Source
@@ -378,6 +416,27 @@ function App() {
                 </Source>
               )}
             </>
+          )}
+          {travelMode === 'biking' && bikeRoute?.coordinates.length > 1 && (
+            <Source
+              id="bike-route-source"
+              type="geojson"
+              data={{
+                type: 'Feature',
+                properties: {},
+                geometry: { type: 'LineString', coordinates: bikeRoute.coordinates }
+              }}
+            >
+              <Layer
+                id="bike-route-layer"
+                type="line"
+                paint={{
+                  'line-color': '#d97706',
+                  'line-width': 5,
+                  'line-opacity': 0.9
+                }}
+              />
+            </Source>
           )}
         </Map>
       ) : null}
